@@ -17,7 +17,7 @@
  */
 
 $GLOBALS['TL_DCA']['tl_module']['palettes']['jvh_orderhistory']             = '{title_legend},name,headline,type;{config_legend},iso_config_ids,jvh_document_id;{redirect_legend},jumpTo,iso_cart_jumpTo;{template_legend},customTpl,iso_includeMessages;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID,space';
-$GLOBALS['TL_DCA']['tl_module']['palettes']['jvh_orderdetails']             = '{title_legend},name,headline,type;{config_legend},iso_loginRequired,jvh_document_id,iso_payment_modules;{redirect_legend:hide},iso_cart_jumpTo;{template_legend},customTpl,iso_collectionTpl,iso_orderCollectionBy,iso_gallery,iso_includeMessages;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID,space';
+$GLOBALS['TL_DCA']['tl_module']['palettes']['jvh_orderdetails']             = '{title_legend},name,headline,type;{config_legend},iso_loginRequired,jvh_document_id;iso_payment_modules;{redirect_legend:hide},iso_cart_jumpTo;{template_legend},customTpl,iso_collectionTpl,iso_orderCollectionBy,iso_gallery,iso_includeMessages;{protected_legend:hide},protected;{expert_legend:hide},guests,cssID,space';
 
 $GLOBALS['TL_DCA']['tl_module']['fields']['jvh_document_id'] = array
 (
