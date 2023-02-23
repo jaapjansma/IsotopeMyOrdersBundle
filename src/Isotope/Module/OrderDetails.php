@@ -157,7 +157,6 @@ class OrderDetails extends BaseOrderDetails {
       /** @var Template|\stdClass $objTemplate */
       $objTemplate = new Template('iso_checkout_payment_method');
       $objTemplate->headline = $GLOBALS['TL_LANG']['MSC']['payment_method'];
-      $objTemplate->message = $GLOBALS['TL_LANG']['MSC']['payment_method_message'];
       $objTemplate->options = $objWidget->parse();
       $objTemplate->paymentMethods = $this->modules;
 
