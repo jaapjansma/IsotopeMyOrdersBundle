@@ -52,7 +52,9 @@ class PackagingSlip {
     /** @var IsotopePackagingSlipModel[] $packagingSlips */
     $packagingSlips = static::getPackagingSlipsByOrder($objOrder);
     foreach ($packagingSlips as $packagingSlip) {
-      $trackAndTraceLinks[] = $packagingSlip->getTrackAndTraceLink();
+      if ($packagingSlip->getTrackAndTraceLink()) {
+        $trackAndTraceLinks[] = $packagingSlip->getTrackAndTraceLink();
+      }
     }
     return $trackAndTraceLinks;
   }
