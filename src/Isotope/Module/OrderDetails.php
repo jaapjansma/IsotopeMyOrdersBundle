@@ -76,7 +76,7 @@ class OrderDetails extends BaseOrderDetails {
     $this->Template->trackAndTrace = PackagingSlip::getTrackAndTraceLinks($objOrder);
     $this->Template->packagingSlips = PackagingSlip::getPackagingSlipsByOrder($objOrder);
     $this->Template->invoice = Url::addQueryString('invoice=' . $objOrder->id);
-    if (!$objOrder->isPaid()) {
+    if ($this->ableToPay($objOrder)) {
       $this->Template->payUrl = Url::addQueryString('step=pay');
     }
     $this->Template->action        = ampersand(\Environment::get('request'));
@@ -93,6 +93,16 @@ class OrderDetails extends BaseOrderDetails {
     }
 
     $this->addLogStatus($objOrder);
+  }
+
+  protected function ableToPay(Order $objOrder): bool {
+    if (!$objOrder->isPaid()) {
+      $this->initializePaymentModules();
+      if (count($this->options)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   protected function checkForPayment(Order $objOrder) {
