@@ -73,6 +73,7 @@ class OrderDetails extends BaseOrderDetails {
       return;
     }
 
+    $this->Template->orderStatus          = $objOrder->getStatusLabel();
     $this->Template->trackAndTrace = PackagingSlip::getTrackAndTraceLinks($objOrder);
     $this->Template->packagingSlips = PackagingSlip::getPackagingSlipsByOrder($objOrder);
     $this->Template->invoice = Url::addQueryString('invoice=' . $objOrder->id);
