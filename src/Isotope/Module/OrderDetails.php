@@ -19,6 +19,7 @@
 namespace JvH\IsotopeMyOrdersBundle\Isotope\Module;
 
 use Contao\Controller;
+use Contao\Database;
 use Contao\Input;
 use Haste\Util\Url;
 use Isotope\Interfaces\IsotopeProductCollection;
@@ -34,7 +35,9 @@ use Isotope\Model\OrderStatus;
 use Isotope\Model\ProductCollectionLog;
 use Haste\Util\Format;
 use Krabo\IsotopePackagingSlipBundle\Helper\IsotopeHelper;
+use Krabo\IsotopePackagingSlipBundle\Helper\PackagingSlipCheckAvailability;
 use Krabo\IsotopePackagingSlipBundle\Model\IsotopePackagingSlipModel;
+use Krabo\IsotopePackagingSlipBundle\Model\IsotopePackagingSlipShipperModel;
 
 class OrderDetails extends BaseOrderDetails {
 
@@ -73,6 +76,23 @@ class OrderDetails extends BaseOrderDetails {
       return;
     }
 
+    if ($this->strCurrentStep == 'complete' && $objOrder->isPaid()) {
+      $packagingSlips = IsotopePackagingSlipModel::findPackagingSlipsByOrder($objOrder);
+      $arrIds = [];
+      foreach($packagingSlips as $packagingSlip) {
+        if ($packagingSlip->status == 0) {
+          $arrIds[] = $packagingSlip->id;
+        }
+      }
+      if (count($arrIds)) {
+        PackagingSlipCheckAvailability::resetAvailabilityStatus($arrIds);
+      }
+
+      $url = Url::removeQueryString(['step']);
+      $url = str_replace("/complete.html?", ".html?", $url);
+      Controller::redirect($url);
+    }
+
     $this->Template->orderStatus          = $objOrder->getStatusLabel();
     $this->Template->trackAndTrace = PackagingSlip::getTrackAndTraceLinks($objOrder);
     $this->Template->packagingSlips = PackagingSlip::getPackagingSlipsByOrder($objOrder);
@@ -85,7 +105,7 @@ class OrderDetails extends BaseOrderDetails {
     $this->Template->formSubmit    = $this->strFormId;
     $this->Template->enctype       = 'application/x-www-form-urlencoded';
 
-    if ($this->checkChangeScheduledShippingDate()) {
+    if ($this->checkChangeScheduledShippingDate($objOrder)) {
       return;
     }
 
@@ -200,7 +220,8 @@ class OrderDetails extends BaseOrderDetails {
     return false;
   }
 
-  protected function checkChangeScheduledShippingDate(): bool {
+  protected function checkChangeScheduledShippingDate(Order $objOrder): bool {
+    $objDatabase = Database::getInstance();
     $packagingSlipId = (int) \Input::get('change_packaging_slip_id');
     if ($packagingSlipId) {
       $packagingSlip = IsotopePackagingSlipModel::findByPk($packagingSlipId);
@@ -235,8 +256,11 @@ class OrderDetails extends BaseOrderDetails {
                 elseif ($scheduledShippingDate->getTimestamp() < $earliestShippingDateTimeStamp) {
                   $objShippingDateWidget->addError(sprintf($GLOBALS['TL_LANG']['MSC']['scheduled_shipping_date_error'], $earliestShippingDate));
                 } else {
+                  $objOrder->scheduled_shipping_date = $scheduledShippingDate->getTimestamp();
                   $packagingSlip->scheduled_shipping_date = $scheduledShippingDate->getTimestamp();
+                  $packagingSlip->scheduled_picking_date = $this->getScheduledPickingDate($objOrder);
                   $packagingSlip->save();
+                  $objDatabase->execute("UPDATE `tl_iso_product_collection` SET `scheduled_shipping_date` = '".$objOrder->scheduled_shipping_date."'");
                   $reload = true;
                 }
               } catch (\Exception $e) {
@@ -332,6 +356,23 @@ class OrderDetails extends BaseOrderDetails {
     }
 
     return $strUrl;
+  }
+
+  protected function getScheduledPickingDate(Order $order) {
+    $shipper = null;
+    if ($order->getShippingMethod()->shipper_id) {
+      $shipper = IsotopePackagingSlipShipperModel::findByPk($order->getShippingMethod()->shipper_id);
+    }
+    $earliestScheduledShippingDate = IsotopeHelper::getScheduledShippingDate($order, $shipper);
+    $date = new \DateTime();
+    $date->setTimestamp($earliestScheduledShippingDate);
+    $date->setTime(23, 59);
+    $earliestScheduledShippingDate = $date->getTimestamp();
+    $earliestPickingDate = IsotopeHelper::getScheduledPickingDate($order, $shipper);
+    if ($order->scheduled_shipping_date && $order->scheduled_shipping_date > $earliestScheduledShippingDate) {
+      return $order->scheduled_shipping_date;
+    }
+    return $earliestPickingDate;
   }
 
 
