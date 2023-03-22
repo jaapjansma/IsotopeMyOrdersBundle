@@ -261,7 +261,7 @@ class OrderDetails extends BaseOrderDetails {
                   $packagingSlip->scheduled_picking_date = $this->getScheduledPickingDate($objOrder);
                   $packagingSlip->check_availability = '1';
                   $packagingSlip->is_available = '0'; // Uitgesteld
-                  $packagingSlip->availability_notes = null;
+                  $packagingSlip->availability_notes = '';
                   $packagingSlip->save();
                   $objDatabase->execute("UPDATE `tl_iso_product_collection` SET `scheduled_shipping_date` = '".$objOrder->scheduled_shipping_date."' WHERE `id` = '".$objOrder->id."'");
                   $reload = true;
