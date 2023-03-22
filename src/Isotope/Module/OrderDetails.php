@@ -259,8 +259,10 @@ class OrderDetails extends BaseOrderDetails {
                   $objOrder->scheduled_shipping_date = $scheduledShippingDate->getTimestamp();
                   $packagingSlip->scheduled_shipping_date = $scheduledShippingDate->getTimestamp();
                   $packagingSlip->scheduled_picking_date = $this->getScheduledPickingDate($objOrder);
+                  $packagingSlip->check_availability = '1';
+                  $packagingSlip->is_available = '0'; // Uitgesteld
                   $packagingSlip->save();
-                  $objDatabase->execute("UPDATE `tl_iso_product_collection` SET `scheduled_shipping_date` = '".$objOrder->scheduled_shipping_date."'");
+                  $objDatabase->execute("UPDATE `tl_iso_product_collection` SET `scheduled_shipping_date` = '".$objOrder->scheduled_shipping_date."' WHERE `id` = '".$objOrder->id."'");
                   $reload = true;
                 }
               } catch (\Exception $e) {
