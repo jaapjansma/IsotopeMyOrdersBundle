@@ -256,14 +256,16 @@ class OrderDetails extends BaseOrderDetails {
                 elseif ($scheduledShippingDate->getTimestamp() < $earliestShippingDateTimeStamp) {
                   $objShippingDateWidget->addError(sprintf($GLOBALS['TL_LANG']['MSC']['scheduled_shipping_date_error'], $earliestShippingDate));
                 } else {
-                  $objOrder->scheduled_shipping_date = $scheduledShippingDate->getTimestamp();
-                  $packagingSlip->scheduled_shipping_date = $scheduledShippingDate->getTimestamp();
-                  $packagingSlip->scheduled_picking_date = $this->getScheduledPickingDate($objOrder);
-                  $packagingSlip->check_availability = '1';
-                  $packagingSlip->is_available = '0'; // Uitgesteld
-                  $packagingSlip->availability_notes = '';
-                  $packagingSlip->save();
-                  $objDatabase->execute("UPDATE `tl_iso_product_collection` SET `scheduled_shipping_date` = '".$objOrder->scheduled_shipping_date."' WHERE `id` = '".$objOrder->id."'");
+                  if (date('Ymd', $packagingSlip->scheduled_shipping_date) != $scheduledShippingDate->format('Ymd')) {
+                    $objOrder->scheduled_shipping_date = $scheduledShippingDate->getTimestamp();
+                    $packagingSlip->scheduled_shipping_date = $scheduledShippingDate->getTimestamp();
+                    $packagingSlip->scheduled_picking_date = $this->getScheduledPickingDate($objOrder);
+                    $packagingSlip->check_availability = '1';
+                    $packagingSlip->is_available = '0'; // Uitgesteld
+                    $packagingSlip->availability_notes = '';
+                    $packagingSlip->save();
+                    $objDatabase->execute("UPDATE `tl_iso_product_collection` SET `scheduled_shipping_date` = '".$objOrder->scheduled_shipping_date."' WHERE `id` = '".$objOrder->id."'");
+                  }
                   $reload = true;
                 }
               } catch (\Exception $e) {
@@ -310,19 +312,12 @@ class OrderDetails extends BaseOrderDetails {
 
       if (null !== $objModules) {
         foreach ($objModules as $objModule) {
-
-          if (!$objModule->isAvailable()) {
-            continue;
-          }
-
           $strLabel = $objModule->getLabel();
           $fltPrice = $objModule->getPrice();
-
           if ($fltPrice != 0) {
             if ($objModule->isPercentage()) {
               $strLabel .= ' (' . $objModule->getPercentageLabel() . ')';
             }
-
             $strLabel .= ': ' . Isotope::formatPriceWithCurrency($fltPrice);
           }
 
